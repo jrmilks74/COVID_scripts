@@ -1,9 +1,10 @@
 library(forecast)
+library(ggplot2)
 #Get the raw data from John Hopkins University COVID dashboard via GitHub
 COVID <- read.csv("csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", header = TRUE)
 
 #Process the data (sum up the individual province data for Australia, Canada, and China, change the Congo names to official country names)
-COVID <- COVID[-c(42, 43, 102, 103, 105, 119:128, 159, 171, 190:193, 216, 251:260, 267),]
+COVID <- COVID[-c(42, 43, 102, 103, 105, 119:128, 159, 171, 190:193, 216, 252:261, 268),]
 COVID <- COVID[,-c(1,3,4)]
 COVID[2:313] <- lapply(COVID[2:313], as.numeric)
 COVID <- aggregate(.~Country.Region, COVID, sum)
@@ -28,12 +29,16 @@ daily_infections <- diff(COVID)
 daily_infections_ma <- ma(daily_infections, 7)
 
 daily_infections_ma_df <- as.data.frame(daily_infections_ma)
-daily_infections_ma_df$Time <- seq.Date(as.Date("2022-01-22"), origin = "1970-01-01", by = "day", length.out = nrow(daily_infections_ma_df))
+daily_infections_ma_df$Time <- seq.Date(as.Date("2020-01-22"), origin = "1970-01-01", by = "day", length.out = nrow(daily_infections_ma_df))
 colnames(daily_infections_ma_df) <- colnames(COVID_df)
 
 #Plot the US pandemic trend and the daily infections
 plot(US~Time, data = COVID_df, type = "l", lwd = 1.5, xlab = "Time", ylab = "Total positive cases", main = "US COVID-19 pandemic since January 2020")
+abline(v = as.Date("2020-11-26"), lwd = 1.5, col = "red", lty = 2)
+text(x = as.Date("2020-11-21"), y = 5000000, "Thanksgiving", col = "red", srt = 90)
 plot(US~Time, data = daily_infections_ma_df, type = "l", lwd = 1.5, xlab = "Time", ylab = "Number of positive cases", main = "COVID-19 cases per day in the US, 7-day MA")
+abline(v = as.Date("2020-11-26"), lwd = 1.5, col = "red", lty = 2)
+text(x = as.Date("2020-11-21"), y = 50000, "Thanksgiving", col = "red", srt = 90)
 
 #Import country population data from https://www.kaggle.com/tanuprabhu/population-by-country-2020, filter it out to just those countries in the COVID data, then extract a vector of world population numbers
 population_by_country_2020 <- read.csv("~/Desktop/COVID-19/population_by_country_2020.csv", header = T)
@@ -53,7 +58,7 @@ daily_infections_per_capita <- t((t(daily_infections)/population_2020[, 2])*1000
 ipc_df <- data.frame(infections_per_capita)
 ipc_df$Time <- seq.Date(as.Date("2020-01-22"), by = "day", origin = "1970-01-01", length.out = nrow(ipc_df))
 
-plot(US~Time, data = ipc_df, type = "l", xlab = "Time", ylab = "Positive cases per capita", main = "COVID infections per 100,000 people", lwd = 1.5, ylim = c(0, 5000))
+plot(US~Time, data = ipc_df, type = "l", xlab = "Time", ylab = "Positive cases per capita", main = "COVID infections per 100,000 people", lwd = 1.5, ylim = c(0, 5300))
 points(Canada~Time, data = ipc_df, type = "l", col = "blue", lwd = 1.5)
 points(France~Time, data = ipc_df, type = "l", col = "green", lwd = 1.5)
 points(United.Kingdom~Time, data = ipc_df, type = "l", col = "red", lwd = 1.5)
@@ -86,7 +91,7 @@ legend("topleft", legend = c("US", "Canada", "France", "UK", "Russia", "Sweden",
 deaths <- read.csv("csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv", header = TRUE)
 
 #Process the data (sum up the individual province data for Australia, Canada, and China, change the Congo names to official country names)
-deaths <- deaths[-c(42, 43, 102, 103, 105, 119:128, 159, 171, 190:193, 216, 251:260, 267),]
+deaths <- deaths[-c(42, 43, 102, 103, 105, 119:128, 159, 171, 190:193, 216, 252:261, 268),]
 deaths <- deaths[,-c(1,3,4)]
 deaths[2:313] <- lapply(deaths[2:313], as.numeric)
 deaths <- aggregate(.~Country.Region, deaths, sum)
@@ -111,13 +116,17 @@ daily_deaths <- diff(deaths)
 daily_deaths_ma <- ma(daily_deaths, 7)
 
 daily_deaths_ma_df <- as.data.frame(daily_deaths_ma)
-daily_deaths_ma_df$Time <- seq.Date(as.Date("2022-01-22"), origin = "1970-01-01", by = "day", length.out = nrow(daily_deaths_ma_df))
+daily_deaths_ma_df$Time <- seq.Date(as.Date("2020-01-22"), origin = "1970-01-01", by = "day", length.out = nrow(daily_deaths_ma_df))
 colnames(daily_deaths_ma_df) <- colnames(deaths_df)
 
-#Plot the US pandemic trend and the daily infections
+#Plot the US pandemic trend and the daily deaths
 plot(US~Time, data = deaths_df, type = "l", lwd = 1.5, xlab = "Time", ylab = "Total deaths", main = "US COVID-19 deaths since January 2020")
+abline(v = as.Date("2020-11-26"), lwd = 1.5, col = "red", lty = 2)
+text(x = as.Date("2020-11-21"), y = 50000, "Thanksgiving", col = "red", srt = 90)
 
 plot(US~Time, data = daily_deaths_ma_df, type = "l", lwd = 1.5, xlab = "Time", ylab = "Number of deaths", main = "COVID-19 deaths per day in the US, 7-day MA")
+abline(v = as.Date("2020-11-26"), lwd = 1.5, col = "red", lty = 2)
+text(x = as.Date("2020-11-21"), y = 500, "Thanksgiving", col = "red", srt = 90)
 
 #Match country population data with country death data
 country_match <- match(colnames(deaths), population_by_country_2020[, 1])
@@ -132,7 +141,7 @@ daily_deaths_per_capita <- t((t(daily_deaths)/population_2020[, 2])*100000)
 dpc_df <- data.frame(deaths_per_capita)
 dpc_df$Time <- seq.Date(as.Date("2020-01-22"), by = "day", origin = "1970-01-01", length.out = nrow(dpc_df))
 
-plot(US~Time, data = dpc_df, type = "l", xlab = "Time", ylab = "Deaths per capita", main = "COVID deaths per 100,000 people", lwd = 1.5, ylim = c(0, 150))
+plot(US~Time, data = dpc_df, type = "l", xlab = "Time", ylab = "Deaths per capita", main = "COVID deaths per 100,000 people", lwd = 1.5, ylim = c(0, 160))
 points(Canada~Time, data = dpc_df, type = "l", col = "blue", lwd = 1.5)
 points(France~Time, data = dpc_df, type = "l", col = "green", lwd = 1.5)
 points(United.Kingdom~Time, data = dpc_df, type = "l", col = "red", lwd = 1.5)
@@ -162,11 +171,108 @@ points(Italy~Time, data = ddpc_ma_df, type = "l", col = "orange", lwd = 1.5)
 points(Iceland~Time, data = ddpc_ma_df, type = "l", col = "pink", lwd = 1.5)
 legend("top", legend = c("US", "Canada", "France", "UK", "Russia", "Sweden", "Belgium", "Italy", "Iceland"), col = c("black", "blue", "green", "red", "brown", "gold", "purple", "orange", "pink"), lwd = 1.5)
 
+#Nordic countries
+ggplot(ipc_df, aes(x = Time)) +
+        theme_bw() +
+        geom_line(aes(y = Sweden, colour = "Sweden")) +
+        geom_line(aes(y = Norway, colour = "Norway")) +
+        geom_line(aes(y = Denmark, colour = "Denmark")) +
+        geom_line(aes(y = Finland, colour = "Finland")) +
+        geom_line(aes(y = Iceland, colour = "Iceland")) +
+        scale_colour_manual("",
+                            breaks = c("Sweden", "Norway", "Denmark", "Finland", "Iceland"),
+                            values = c("black", "red", "green", "orange", "blue")) +
+        scale_x_date(date_breaks = "2 months",
+                     date_minor_breaks = "1 month") +
+        xlab("Time") +
+        ylab("Infections per capita") +
+        ggtitle("COVID infections per 100,000 in Nordic Countries")
+
+
+ggplot(dipc_ma_df, aes(x = Time)) +
+        theme_bw() +
+        geom_line(aes(y = Sweden, colour = "Sweden")) +
+        geom_line(aes(y = Norway, colour = "Norway")) +
+        geom_line(aes(y = Denmark, colour = "Denmark")) +
+        geom_line(aes(y = Finland, colour = "Finland")) +
+        geom_line(aes(y = Iceland, colour = "Iceland")) +
+        scale_colour_manual("",
+                            breaks = c("Sweden", "Norway", "Denmark", "Finland", "Iceland"),
+                            values = c("black", "red", "green", "orange", "blue")) +
+        scale_x_date(date_breaks = "2 months",
+                     date_minor_breaks = "1 month") +
+        xlab("Time") +
+        ylab("Daily infections per capita") +
+        ggtitle("Daily COVID infections per 100,000 in Nordic Countries")
+
+
+ggplot(dpc_df, aes(x = Time)) +
+        theme_bw() +
+        geom_line(aes(y = Sweden, colour = "Sweden")) +
+        geom_line(aes(y = Norway, colour = "Norway")) +
+        geom_line(aes(y = Denmark, colour = "Denmark")) +
+        geom_line(aes(y = Finland, colour = "Finland")) +
+        geom_line(aes(y = Iceland, colour = "Iceland")) +
+        scale_colour_manual("",
+                            breaks = c("Sweden", "Norway", "Denmark", "Finland", "Iceland"),
+                            values = c("black", "red", "green", "orange", "blue")) +
+        scale_x_date(date_breaks = "2 months",
+                     date_minor_breaks = "1 month") +
+        xlab("Time") +
+        ylab("Deaths per capita") +
+        ggtitle("COVID deaths per 100,000 in Nordic Countries")
+
+
+ggplot(ddpc_ma_df, aes(x = Time)) +
+        theme_bw() +
+        geom_line(aes(y = Sweden, colour = "Sweden")) +
+        geom_line(aes(y = Norway, colour = "Norway")) +
+        geom_line(aes(y = Denmark, colour = "Denmark")) +
+        geom_line(aes(y = Finland, colour = "Finland")) +
+        geom_line(aes(y = Iceland, colour = "Iceland")) +
+        scale_colour_manual("",
+                            breaks = c("Sweden", "Norway", "Denmark", "Finland", "Iceland"),
+                            values = c("black", "red", "green", "orange", "blue")) +
+        scale_x_date(date_breaks = "2 months",
+                     date_minor_breaks = "1 month") +
+        xlab("Time") +
+        ylab("Daily deaths per capita") +
+        ggtitle("Daily COVID deaths per 100,000 in Nordic Countries")
+
+
+#North America
+plot(US~Time, data = ipc_df, ylab = "Total cases per capita", main = "COVID cases per 100,000 in North America", col = "red", type = "l", lwd = 1.5)
+points(Canada~Time, data = ipc_df, col = "blue", type = "l", lwd = 1.5)
+points(Mexico~Time, data = ipc_df, col = "green", type = "l", lwd = 1.5)
+abline(v = as.Date("2020-11-26"), lwd = 1.5, col = "black", lty = 2)
+text(x = as.Date("2020-11-21"), y = 2000, "Thanksgiving", col = "black", srt = 90)
+legend("topleft", c("US", "Canada", "Mexico"), col = c("red", "blue", "green"), lwd = 2)
+
+plot(US~Time, data = dipc_ma_df, ylab = "Daily cases per capita", main = "Daily COVID cases per 100,000 in North America", col = "red", type = "l", lwd = 1.5)
+points(Canada~Time, data = dipc_ma_df, col = "blue", type = "l", lwd = 1.5)
+points(Mexico~Time, data = dipc_ma_df, col = "green", type = "l", lwd = 1.5)
+abline(v = as.Date("2020-11-26"), lwd = 1.5, col = "black", lty = 2)
+text(x = as.Date("2020-11-21"), y = 30, "Thanksgiving", col = "black", srt = 90)
+legend("topleft", c("US", "Canada", "Mexico"), col = c("red", "blue", "green"), lwd = 2)
+
+plot(US~Time, data = dpc_df, ylab = "Total deaths per capita", main = "COVID deaths per 100,000 in North America", col = "red", type = "l", lwd = 1.5)
+points(Canada~Time, data = dpc_df, col = "blue", type = "l", lwd = 1.5)
+points(Mexico~Time, data = dpc_df, col = "green", type = "l", lwd = 1.5)
+abline(v = as.Date("2020-11-26"), lwd = 1.5, col = "black", lty = 2)
+text(x = as.Date("2020-11-20"), y = 50, "Thanksgiving", col = "black", srt = 90)
+legend("topleft", c("US", "Canada", "Mexico"), col = c("red", "blue", "green"), lwd = 2)
+
+plot(US~Time, data = ddpc_ma_df, ylab = "Daily deaths per capita", main = "Daily COVID deaths per 100,000 in North America", col = "red", type = "l", lwd = 1.5)
+points(Canada~Time, data = ddpc_ma_df, col = "blue", type = "l", lwd = 1.5)
+points(Mexico~Time, data = ddpc_ma_df, col = "green", type = "l", lwd = 1.5)
+abline(v = as.Date("2020-11-26"), lwd = 1.5, col = "black", lty = 2)
+text(x = as.Date("2020-11-20"), y = 0.10, "Thanksgiving", col = "black", srt = 90)
+legend("topleft", c("US", "Canada", "Mexico"), col = c("red", "blue", "green"), lwd = 2)
+
 #COVID numbers by state
 US <- read.csv("~/Desktop/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv")
 US.deaths <- read.csv("csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv", header = TRUE)
 
-#Focus on my home state and county
 Ohio <- subset(US, Province_State == "Ohio")
 Montgomery <- subset(Ohio, Admin2 == "Montgomery")
 Ohio_sum <- Ohio[, -c(1:11)]
@@ -179,10 +285,13 @@ Ohio_daily <- diff(Ohio_sum$Cases)
 Ohio_time <- seq.Date(as.Date("2020-01-23"), by = "day", origin = "1970-01-01", length.out = length(Ohio_daily))
 Ohio_daily <- data.frame(Time = Ohio_time, daily = Ohio_daily)
 Ohio_daily$ma <- ma(Ohio_daily$daily, 7)
-plot(ma~Time, data = Ohio_daily, ylab = "COVID-19 cases per day", main = "COVID-19 cases per day in Ohio, USA", type = "l", col = "red", lwd = 1.5, xaxt = "n")
+plot(ma~Time, data = Ohio_daily, ylab = "COVID-19 cases per day", main = "COVID-19 cases per day in Ohio, USA", type = "l", lwd = 1.5, xaxt = "n")
 ticks.at <- seq(min(Ohio_daily$Time), max(Ohio_daily$Time), by = "months")
 ticks.lab <- format(ticks.at, format = "%b")
 Axis(Ohio_daily$Time, at = ticks.at, side = 1, labels = ticks.lab, las = 2)
+abline(v = as.Date("2020-11-26"), lwd = 1.5, col = "red", lty = 2)
+text(x = as.Date("2020-10-30"), y = 3000, "Thanksgiving", col = "red")
+
 
 Montgomery <- Montgomery[, -c(1:11)]
 Montgomery <- as.matrix(Montgomery)
