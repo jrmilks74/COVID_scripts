@@ -2,11 +2,33 @@ library(forecast)
 library(ggplot2)
 library(dplyr)
 library(lubridate)
-#Get the raw data from John Hopkins University COVID dashboard via GitHub
+library(gridExtra)
+
+#Two custom functions to return the highest and lowest rates in the dipc.ma and ddpc.ma matrices
+#y = matrix, n = number of countries to list
+highest <- function(y, n) {
+        library(dplyr)
+        mat <- t(y)
+        mat <- as.data.frame(mat)
+        mat <- select(mat, ncol(mat) - 3)
+        top_n_countries <- mat %>% arrange(desc(mat)) %>% slice(1:n)
+        top_n_countries
+}
+
+lowest <- function(y, n) {
+        library(dplyr)
+        mat <- t(y)
+        mat <- as.data.frame(mat)
+        mat <- select(mat, ncol(mat) - 3)
+        bottom_n_countries <- mat %>% arrange(mat) %>% slice(1:n)
+        bottom_n_countries
+}
+
+#Get the raw data for total infections from John Hopkins University COVID dashboard via GitHub
 COVID <- read.csv("csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", header = TRUE)
 
 #Process the data (sum up the individual province data for Australia, Canada, and China, change the Congo names to official country names)
-COVID <- COVID[-c(42, 43, 102, 103, 105, 119:129, 160, 172, 191:194, 217, 253:262, 269),]
+COVID <- COVID[-c(42, 43, 102, 103, 105, 119:129, 160, 172, 192:195, 218, 254:263, 270),]
 COVID <- COVID[,-c(1,3,4)]
 COVID[2:313] <- lapply(COVID[2:313], as.numeric)
 COVID <- aggregate(.~Country.Region, COVID, sum)
@@ -128,7 +150,7 @@ ggplot(dipc_ma_df, aes(x = Time)) +
 deaths <- read.csv("csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv", header = TRUE)
 
 #Process the data (sum up the individual province data for Australia, Canada, and China, change the Congo names to official country names)
-deaths <- deaths[-c(42, 43, 102, 103, 105, 119:129, 160, 172, 191:194, 217, 253:262, 269),]
+deaths <- deaths[-c(42, 43, 102, 103, 105, 119:129, 160, 172, 192:195, 218, 254:263, 270),]
 deaths <- deaths[,-c(1,3,4)]
 deaths[2:313] <- lapply(deaths[2:313], as.numeric)
 deaths <- aggregate(.~Country.Region, deaths, sum)
@@ -376,3 +398,6 @@ ggplot(ddpc_ma_df, aes(x = Time)) +
              subtitle = "North America",
              x = "Time",
              y = "Deaths per capita")
+
+highest(dipc.ma, 20)
+highest(ddpc.ma, 20)
